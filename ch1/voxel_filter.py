@@ -13,7 +13,27 @@ def voxel_filter(point_cloud, leaf_size):
     filtered_points = []
     # 作业3
     # 屏蔽开始
+    
+    # 计算点云边界
+    max_bound = point_cloud.max(axis=0)
+    min_bound = point_cloud.min(axis=0)
 
+    D = np.floor((max_bound - min_bound)/leaf_size).astype(np.int32)
+    H = np.floor((point_cloud - min_bound) / leaf_size).astype(np.int32)
+
+    Voxel_indexs = H[:,0] + H[:,1]*D[0] + H[:,2]*D[0]*D[1]
+    
+    # 用字典存储voxel->points
+    voxel_dict = {}
+    for i, voxel_index in enumerate(Voxel_indexs):
+        key = voxel_index
+        if key not in voxel_dict:
+            voxel_dict[key] = []
+        voxel_dict[key].append(point_cloud[i])
+    
+    # 每个voxel取平均值   
+    for pts in voxel_dict.values():
+        filtered_points.append(np.mean(pts, axis=0))        
  
     # 屏蔽结束
 
