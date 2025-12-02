@@ -65,15 +65,24 @@ def axis_round_robin(axis, dim):
 #     root: 即构建完成的树
 def kdtree_recursive_build(root, db, point_indices, axis, leaf_size):
     if root is None:
+        #class Node(axis, value, left, right, point_indices)
         root = Node(axis, None, None, None, point_indices)
 
     # determine whether to split into left and right
     if len(point_indices) > leaf_size:
         # --- get the split position ---
-        point_indices_sorted, _ = sort_key_by_vale(point_indices, db[point_indices, axis])  # M
+        # point_indices_sorted, _ = sort_key_by_vale(point_indices, db[point_indices, axis])  
         
         # 作业1
         # 屏蔽开始
+        idx_sorted = np.argsort(db[point_indices,axis])
+        point_indices = point_indices[idx_sorted]
+        left_indices = point_indices[0:len(point_indices)//2]
+        right_indices = point_indices[len(point_indices)//2:]        
+        
+        root.value = db[point_indices[len(point_indices)//2], axis]
+        root.left  = kdtree_recursive_build(None, db, left_indices, axis_round_robin(axis, db.shape[1]), leaf_size)
+        root.right = kdtree_recursive_build(None, db, right_indices, axis_round_robin(axis, db.shape[1]), leaf_size)       
 
         # 屏蔽结束
     return root
