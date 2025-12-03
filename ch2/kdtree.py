@@ -146,18 +146,17 @@ def kdtree_knn_search(root: Node, db: np.ndarray, result_set: KNNResultSet, quer
 
     # 作业2
     # 提示：仍通过递归的方式实现搜索
-    # 屏蔽开始    
+    # 屏蔽开始        
     
-    # kdtree node: axis / value / left / right / point_indices    
     if query[root.axis] <= root.value:
-        kdtree_knn_search(root.left, db, result_set, query)
-        if not result_set.full() or abs(query[root.axis]-root.value) < result_set.worstDistance:
-           kdtree_knn_search(root.right, db, result_set, query)
-        
-    elif query[root.axis] > root.value:
-        kdtree_knn_search(root.right, db, result_set, query)
-        if not result_set.full() or abs(query[root.axis]-root.value) < result_set.worstDistance:
-            kdtree_knn_search(root.left, db, result_set, query)
+        first, second = root.left, root.right
+    else:
+        first, second = root.right, root.left
+    
+    kdtree_knn_search(first, db, result_set, query)
+    
+    if not result_set.full() or abs(query[root.axis]-root.value) < result_set.worstDist():
+        kdtree_knn_search(second, db, result_set, query)         
     
     # 屏蔽结束
 
@@ -187,6 +186,16 @@ def kdtree_radius_search(root: Node, db: np.ndarray, result_set: RadiusNNResultS
     # 提示：通过递归的方式实现搜索
     # 屏蔽开始
 
+    if query[root.axis] <= root.value:
+        first, second = root.left, root.right
+    else:
+        first, second = root.right, root.left
+    
+    kdtree_radius_search(first, db, result_set, query)
+    
+    if abs(query[root.axis]-root.value) < result_set.worstDist():
+        kdtree_radius_search(second, db, result_set, query)    
+
     # 屏蔽结束
 
     return False
@@ -198,8 +207,9 @@ def main():
     db_size = 64
     dim = 3
     leaf_size = 4
-    k = 1
+    k = 3
 
+    np.random.seed(42)
     db_np = np.random.rand(db_size, dim)
 
     root = kdtree_construction(db_np, leaf_size=leaf_size)
@@ -214,20 +224,26 @@ def main():
     kdtree_knn_search(root, db_np, result_set, query)
     
     print(result_set)
-    #
-    # diff = np.linalg.norm(np.expand_dims(query, 0) - db_np, axis=1)
-    # nn_idx = np.argsort(diff)
-    # nn_dist = diff[nn_idx]
-    # print(nn_idx[0:k])
-    # print(nn_dist[0:k])
-    #
-    #
-    # print("Radius search:")
-    # query = np.asarray([0, 0, 0])
-    # result_set = RadiusNNResultSet(radius = 0.5)
-    # kdtree_radius_search(root, db_np, result_set, query)
-    # print(result_set)
+    
+    diff = np.linalg.norm(np.expand_dims(query, 0) - db_np, axis=1)
+    nn_idx = np.argsort(diff)
+    nn_dist = diff[nn_idx]
+    print(nn_idx[0:k])
+    print(nn_dist[0:k])
+    
+    
+    print("Radius search:")
+    query = np.asarray([0, 0, 0])
+    result_set = RadiusNNResultSet(radius = 0.6)
+    kdtree_radius_search(root, db_np, result_set, query)
+    print(result_set)
 
+    print("Ground truth:")
+    nn_idx = np.where(diff <= 0.5)[0]
+    nn_dist = diff[nn_idx]
+    print(nn_idx)
+    print(nn_dist)  
+    
 
 if __name__ == '__main__':
     main()
