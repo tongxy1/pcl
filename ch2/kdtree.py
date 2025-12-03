@@ -71,16 +71,15 @@ def kdtree_recursive_build(root, db, point_indices, axis, leaf_size):
     # determine whether to split into left and right
     if len(point_indices) > leaf_size:
         # --- get the split position ---
-        # point_indices_sorted, _ = sort_key_by_vale(point_indices, db[point_indices, axis])  
+        point_indices_sorted, _ = sort_key_by_vale(point_indices, db[point_indices, axis])  
         
         # 作业1
-        # 屏蔽开始
-        idx_sorted = np.argsort(db[point_indices,axis])
-        point_indices = point_indices[idx_sorted]
-        left_indices = point_indices[0:len(point_indices)//2]
-        right_indices = point_indices[len(point_indices)//2:]        
+        # 屏蔽开始        
+        length = len(point_indices_sorted)
+        left_indices = point_indices_sorted[0:length//2]
+        right_indices = point_indices_sorted[length//2:]        
         
-        root.value = db[point_indices[len(point_indices)//2], axis]
+        root.value = db[point_indices_sorted[length//2], axis]
         root.left  = kdtree_recursive_build(None, db, left_indices, axis_round_robin(axis, db.shape[1]), leaf_size)
         root.right = kdtree_recursive_build(None, db, right_indices, axis_round_robin(axis, db.shape[1]), leaf_size)       
 
@@ -147,8 +146,19 @@ def kdtree_knn_search(root: Node, db: np.ndarray, result_set: KNNResultSet, quer
 
     # 作业2
     # 提示：仍通过递归的方式实现搜索
-    # 屏蔽开始
-
+    # 屏蔽开始    
+    
+    # kdtree node: axis / value / left / right / point_indices    
+    if query[root.axis] <= root.value:
+        kdtree_knn_search(root.left, db, result_set, query)
+        if not result_set.full() or abs(query[root.axis]-root.value) < result_set.worstDistance:
+           kdtree_knn_search(root.right, db, result_set, query)
+        
+    elif query[root.axis] > root.value:
+        kdtree_knn_search(root.right, db, result_set, query)
+        if not result_set.full() or abs(query[root.axis]-root.value) < result_set.worstDistance:
+            kdtree_knn_search(root.left, db, result_set, query)
+    
     # 屏蔽结束
 
     return False
@@ -199,11 +209,11 @@ def main():
     traverse_kdtree(root, depth, max_depth)
     print("tree max depth: %d" % max_depth[0])
 
-    # query = np.asarray([0, 0, 0])
-    # result_set = KNNResultSet(capacity=k)
-    # knn_search(root, db_np, result_set, query)
-    #
-    # print(result_set)
+    query = np.asarray([0, 0, 0])
+    result_set = KNNResultSet(capacity=k)
+    kdtree_knn_search(root, db_np, result_set, query)
+    
+    print(result_set)
     #
     # diff = np.linalg.norm(np.expand_dims(query, 0) - db_np, axis=1)
     # nn_idx = np.argsort(diff)
@@ -215,7 +225,7 @@ def main():
     # print("Radius search:")
     # query = np.asarray([0, 0, 0])
     # result_set = RadiusNNResultSet(radius = 0.5)
-    # radius_search(root, db_np, result_set, query)
+    # kdtree_radius_search(root, db_np, result_set, query)
     # print(result_set)
 
 
