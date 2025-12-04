@@ -66,7 +66,64 @@ def octree_recursive_build(root, db, center, extent, point_indices, leaf_size, m
     else:
         # 作业4
         # 屏蔽开始
+        # center, extent, point_indices
+        sub_extent = extent/2
+        sub_center_0 = [center[0] - sub_extent[0], center[1] - sub_extent[1], center[2] - sub_extent[2]]
+        sub_center_1 = [center[0] - sub_extent[0], center[1] - sub_extent[1], center[2] + sub_extent[2]]
         
+        sub_center_2 = [center[0] - sub_extent[0], center[1] + sub_extent[1], center[2] - sub_extent[2]]
+        sub_center_3 = [center[0] - sub_extent[0], center[1] + sub_extent[1], center[2] + sub_extent[2]]
+
+        sub_center_4 = [center[0] + sub_extent[0], center[1] - sub_extent[1], center[2] - sub_extent[2]]
+        sub_center_5 = [center[0] + sub_extent[0], center[1] - sub_extent[1], center[2] + sub_extent[2]]
+
+        sub_center_6 = [center[0] + sub_extent[0], center[1] + sub_extent[1], center[2] - sub_extent[2]]
+        sub_center_7 = [center[0] + sub_extent[0], center[1] + sub_extent[1], center[2] + sub_extent[2]]
+
+        sub_point_indices_0 = []
+        sub_point_indices_1 = []
+        
+        sub_point_indices_2 = []
+        sub_point_indices_3 = []
+        
+        sub_point_indices_4 = []
+        sub_point_indices_5 = []
+
+        sub_point_indices_6 = []
+        sub_point_indices_7 = []
+        
+        for point_indice in point_indices:
+            x,y,z = db[point_indice]
+            if  x > center[0] and x <= center[0]+sub_extent[0]:
+                if y > center[1] and y <= center[1]+sub_extent[1]:
+                    if z > center[2] and z <= center[2]+sub_extent[2]:
+                         sub_point_indices_7.append(point_indice)  
+                    else:
+                         sub_point_indices_6.append(point_indice)
+                else:
+                    if z > center[2] and z <= center[2]+sub_extent[2]:
+                         sub_point_indices_5.append(point_indice)  
+                    else:
+                         sub_point_indices_4.append(point_indice)
+            else:
+                if y > center[1] and y <= center[1]+sub_extent[1]:
+                    if z > center[2] and z <= center[2]+sub_extent[2]:
+                         sub_point_indices_3.append(point_indice)  
+                    else:
+                         sub_point_indices_2.append(point_indice)
+                else:
+                    if z > center[2] and z <= center[2]+sub_extent[2]:
+                         sub_point_indices_1.append(point_indice)  
+                    else:
+                         sub_point_indices_0.append(point_indice)
+                    
+            
+        
+        
+        for i in range(8):
+            
+            root.children[i] = octree_recursive_build(root.children[i], db, center, extent, point_indices, leaf_size, min_extent)
+            
         # 屏蔽结束
     return root
 
