@@ -249,7 +249,26 @@ def octree_radius_search(root: Octant, db: np.ndarray, result_set: RadiusNNResul
 
     # 作业6
     # 屏蔽开始
-    
+    x,y,z = query
+    code = 0
+    if x > root.center[0]:
+        code |= 4
+    if y > root.center[1]:
+        code |= 2
+    if z > root.center[2]:
+        code |= 1   
+        
+    if octree_radius_search(root.children[code], db, result_set, query) == True:
+        return True
+
+    # then search other children if needed
+    for i in range(8):
+        if i == code or root.children[i] is None:
+            continue
+        if not overlaps(query, result_set.worstDist(), root.children[i]):
+            continue
+        if octree_radius_search(root.children[i], db, result_set, query) == True:
+            return True  
     # 屏蔽结束
 
     # final check of if we can stop search
@@ -292,7 +311,7 @@ def octree_knn_search(root: Octant, db: np.ndarray, result_set: KNNResultSet, qu
     for i in range(8):
         if i == code or root.children[i] is None:
             continue
-        if overlaps(query, result_set.worstDist(), root.children[i]) == False:
+        if not overlaps(query, result_set.worstDist(), root.children[i]):
             continue
         if octree_knn_search(root.children[i], db, result_set, query) == True:
             return True  
