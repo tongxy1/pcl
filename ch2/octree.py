@@ -65,67 +65,69 @@ def octree_recursive_build(root, db, center, extent, point_indices, leaf_size, m
         root.is_leaf = True
     else:
         # 作业4
-        # 屏蔽开始
-        root.is_leaf = False
-        sub_extent = extent/2
-        sub_center_0 = [center[0] - sub_extent[0], center[1] - sub_extent[1], center[2] - sub_extent[2]]
-        sub_center_1 = [center[0] - sub_extent[0], center[1] - sub_extent[1], center[2] + sub_extent[2]]
-        
-        sub_center_2 = [center[0] - sub_extent[0], center[1] + sub_extent[1], center[2] - sub_extent[2]]
-        sub_center_3 = [center[0] - sub_extent[0], center[1] + sub_extent[1], center[2] + sub_extent[2]]
+        # 屏蔽开始        
 
-        sub_center_4 = [center[0] + sub_extent[0], center[1] - sub_extent[1], center[2] - sub_extent[2]]
-        sub_center_5 = [center[0] + sub_extent[0], center[1] - sub_extent[1], center[2] + sub_extent[2]]
-
-        sub_center_6 = [center[0] + sub_extent[0], center[1] + sub_extent[1], center[2] - sub_extent[2]]
-        sub_center_7 = [center[0] + sub_extent[0], center[1] + sub_extent[1], center[2] + sub_extent[2]]
-
-        sub_point_indices_0 = []
-        sub_point_indices_1 = []
-        
-        sub_point_indices_2 = []
-        sub_point_indices_3 = []
-        
-        sub_point_indices_4 = []
-        sub_point_indices_5 = []
-
-        sub_point_indices_6 = []
-        sub_point_indices_7 = []
+        sub_point_indices = [ [] for _ in range(8) ]        
         
         for point_indice in point_indices:
             x,y,z = db[point_indice]
-            if  x >= center[0] and x <= center[0]+sub_extent[0]:
-                if y >= center[1] and y <= center[1]+sub_extent[1]:
-                    if z >= center[2] and z <= center[2]+sub_extent[2]:
-                         sub_point_indices_7.append(point_indice)  
-                    else:
-                         sub_point_indices_6.append(point_indice)
-                else:
-                    if z >= center[2] and z <= center[2]+sub_extent[2]:
-                         sub_point_indices_5.append(point_indice)  
-                    else:
-                         sub_point_indices_4.append(point_indice)
-            else:
-                if y >= center[1] and y <= center[1]+sub_extent[1]:
-                    if z >= center[2] and z <= center[2]+sub_extent[2]:
-                         sub_point_indices_3.append(point_indice)  
-                    else:
-                         sub_point_indices_2.append(point_indice)
-                else:
-                    if z >= center[2] and z <= center[2]+sub_extent[2]:
-                         sub_point_indices_1.append(point_indice)  
-                    else:
-                         sub_point_indices_0.append(point_indice)
-           
-        root.children[0] = octree_recursive_build(root.children[0], db, sub_center_0, sub_extent, sub_point_indices_0, leaf_size, min_extent)
-        root.children[1] = octree_recursive_build(root.children[1], db, sub_center_1, sub_extent, sub_point_indices_1, leaf_size, min_extent)
-        root.children[2] = octree_recursive_build(root.children[2], db, sub_center_2, sub_extent, sub_point_indices_2, leaf_size, min_extent)
-        root.children[3] = octree_recursive_build(root.children[3], db, sub_center_3, sub_extent, sub_point_indices_3, leaf_size, min_extent)
-        root.children[4] = octree_recursive_build(root.children[4], db, sub_center_4, sub_extent, sub_point_indices_4, leaf_size, min_extent)
-        root.children[5] = octree_recursive_build(root.children[5], db, sub_center_5, sub_extent, sub_point_indices_5, leaf_size, min_extent)
-        root.children[6] = octree_recursive_build(root.children[6], db, sub_center_6, sub_extent, sub_point_indices_6, leaf_size, min_extent)
-        root.children[7] = octree_recursive_build(root.children[7], db, sub_center_7, sub_extent, sub_point_indices_7, leaf_size, min_extent)
+
+            code = 0
+            if x > center[0]:
+                code |= 4
+            if y > center[1]:
+                code |= 2
+            if z > center[2]:
+                code |= 1
             
+            sub_point_indices[code].append(point_indice)
+
+            # if  x > center[0]:
+            #     if y > center[1]:
+            #         if z > center[2]:
+            #              sub_point_indices[7].append(point_indice)  
+            #         else:
+            #              sub_point_indices[6].append(point_indice)
+            #     else:
+            #         if z >= center[2]:
+            #              sub_point_indices[5].append(point_indice)  
+            #         else:
+            #              sub_point_indices[4].append(point_indice)
+            # else:
+            #     if y > center[1]:
+            #         if z > center[2]:
+            #              sub_point_indices[3].append(point_indice)  
+            #         else:
+            #              sub_point_indices[2].append(point_indice)
+            #     else:
+            #         if z >= center[2]:
+            #              sub_point_indices[1].append(point_indice)  
+            #         else:
+            #              sub_point_indices[0].append(point_indice)
+        
+        root.is_leaf = False
+        sub_extent = extent/2
+
+        for i in range(8):
+            # sub_center_0 = [center[0] - sub_extent, center[1] - sub_extent, center[2] - sub_extent]
+            # sub_center_1 = [center[0] - sub_extent, center[1] - sub_extent, center[2] + sub_extent]
+            
+            # sub_center_2 = [center[0] - sub_extent, center[1] + sub_extent, center[2] - sub_extent]
+            # sub_center_3 = [center[0] - sub_extent, center[1] + sub_extent, center[2] + sub_extent]
+
+            # sub_center_4 = [center[0] + sub_extent, center[1] - sub_extent, center[2] - sub_extent]
+            # sub_center_5 = [center[0] + sub_extent, center[1] - sub_extent, center[2] + sub_extent]
+
+            # sub_center_6 = [center[0] + sub_extent, center[1] + sub_extent, center[2] - sub_extent]
+            # sub_center_7 = [center[0] + sub_extent, center[1] + sub_extent, center[2] + sub_extent]
+            
+            sub_center_x = center[0] + sub_extent if (i & 4) else center[0] - sub_extent
+            sub_center_y = center[1] + sub_extent if (i & 2) else center[1] - sub_extent
+            sub_center_z = center[2] + sub_extent if (i & 1) else center[2] - sub_extent
+            sub_center = [sub_center_x, sub_center_y, sub_center_z]
+          
+            root.children[i] = octree_recursive_build(root.children[i], db, sub_center, sub_extent, sub_point_indices[i], leaf_size, min_extent)
+
         # 屏蔽结束
     return root
 
@@ -274,7 +276,27 @@ def octree_knn_search(root: Octant, db: np.ndarray, result_set: KNNResultSet, qu
 
     # 作业7
     # 屏蔽开始
-    
+    x,y,z = query
+    code = 0
+    if x > root.center[0]:
+        code |= 4
+    if y > root.center[1]:
+        code |= 2
+    if z > root.center[2]:
+        code |= 1   
+        
+    if octree_knn_search(root.children[code], db, result_set, query) == True:
+        return True
+
+    # then search other children if needed
+    for i in range(8):
+        if i == code or root.children[i] is None:
+            continue
+        if overlaps(query, result_set.worstDist(), root.children[i]) == False:
+            continue
+        if octree_knn_search(root.children[i], db, result_set, query) == True:
+            return True  
+
     # 屏蔽结束
 
     # final check of if we can stop search
@@ -310,21 +332,21 @@ def main():
 
     root = octree_construction(db_np, leaf_size, min_extent)
 
-    # depth = [0]
-    # max_depth = [0]
-    # traverse_octree(root, depth, max_depth)
-    # print("tree max depth: %d" % max_depth[0])
+    depth = [0]
+    max_depth = [0]
+    traverse_octree(root, depth, max_depth)
+    print("tree max depth: %d" % max_depth[0])
 
-    # query = np.asarray([0, 0, 0])
-    # result_set = KNNResultSet(capacity=k)
-    # octree_knn_search(root, db_np, result_set, query)
-    # print(result_set)
-    #
-    # diff = np.linalg.norm(np.expand_dims(query, 0) - db_np, axis=1)
-    # nn_idx = np.argsort(diff)
-    # nn_dist = diff[nn_idx]
-    # print(nn_idx[0:k])
-    # print(nn_dist[0:k])
+    query = np.asarray([0, 0, 0])
+    result_set = KNNResultSet(capacity=k)
+    octree_knn_search(root, db_np, result_set, query)
+    print(result_set)
+    
+    diff = np.linalg.norm(np.expand_dims(query, 0) - db_np, axis=1)
+    nn_idx = np.argsort(diff)
+    nn_dist = diff[nn_idx]
+    print(nn_idx[0:k])
+    print(nn_dist[0:k])
 
     begin_t = time.time()
     print("Radius search normal:")
