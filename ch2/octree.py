@@ -38,7 +38,8 @@ def traverse_octree(root: Octant, depth, max_depth):
     if root is None:
         pass
     elif root.is_leaf:
-        print(root)
+        # print(root)
+        pass
     else:
         for child in root.children:
             traverse_octree(child, depth, max_depth)
@@ -222,7 +223,31 @@ def octree_radius_search_fast(root: Octant, db: np.ndarray, result_set: RadiusNN
     # 作业5
     # 提示：尽量利用上面的inside、overlaps、contains等函数
     # 屏蔽开始
-    
+    if contains(query, result_set.worstDist(), root):
+        # add all points in this octant
+        leaf_points = db[root.point_indices, :]
+        diff = np.linalg.norm(np.expand_dims(query, 0) - leaf_points, axis=1)
+        for i in range(diff.shape[0]):
+            result_set.add_point(diff[i], root.point_indices[i])
+        return False
+
+    if root.is_leaf and len(root.point_indices) > 0:
+        # compare the contents of a leaf
+        leaf_points = db[root.point_indices, :]
+        diff = np.linalg.norm(np.expand_dims(query, 0) - leaf_points, axis=1)
+        for i in range(diff.shape[0]):
+            result_set.add_point(diff[i], root.point_indices[i])
+        # check whether we can stop search now
+        return inside(query, result_set.worstDist(), root)
+
+    for i in range(8):
+        if root.children[i] is None:
+            continue
+        if not overlaps(query, result_set.worstDist(), root.children[i]):
+            continue
+        if octree_radius_search_fast(root.children[i], db, result_set, query) == True:
+            return True 
+        
     # 屏蔽结束
 
     return inside(query, result_set.worstDist(), root)
