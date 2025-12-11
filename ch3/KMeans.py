@@ -12,7 +12,7 @@ class K_Means(object):
     def fit(self, data):
         # 作业1
         # 屏蔽开始
-
+        pass
         # 屏蔽结束
 
     def predict(self, p_datas):
