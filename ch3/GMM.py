@@ -19,17 +19,15 @@ class GMM(object):
     # 更新W
     def _update_W(self, data):
         pdf_vals = [ multivariate_normal.pdf(data,mean=self.Mu[k],cov=np.diag(self.Var[k])) for k in range(self.n_clusters) ]  
-        pdf_vals = np.array(pdf_vals).T  # shape: (n_samples, n_clusters)
-        weighted_pdfs = pdf_vals * self.pi  # shape: (n_samples, n_clusters)
-        sum_weighted_pdfs = np.sum(weighted_pdfs, axis=1, keepdims=True)  # shape: (n_samples, 1)
-        self.W = weighted_pdfs / sum_weighted_pdfs  # shape: (n_samples, n_clusters)
+        pdf_vals = np.array(pdf_vals).T  # ( N, K )
+        weighted_pdfs = pdf_vals * self.pi  # ( N, K)
+        sum_weighted_pdfs = np.sum(weighted_pdfs, axis=1, keepdims=True)  # shape: (N, 1)
+        
+        self.W = weighted_pdfs / sum_weighted_pdfs  # shape: (N, K)
         self.W = np.nan_to_num(self.W)  # 处理除0情况
         self.W /= np.sum(self.W, axis=1, keepdims=True)  # 归一化
-        self.N = np.sum(self.W, axis=0)  # shape: (n_clusters,)
-
-    # 更新pi
-    def _update_pi(self, data):
-        pass
+        self.N = np.sum(self.W, axis=0)  #  (K,)
+  
         
     # 更新Mu
     def _update_Mu(self, data):
@@ -38,11 +36,11 @@ class GMM(object):
         # Mu shape: (K, D)
         
         #cluster 0
-        self.Mu[0]= np.sum(data*self.W[:,0],axis=0)/self.N[0] 
+        self.Mu[0]= np.sum( data * self.W[:,0], axis=0) / self.N[0] 
         #cluster 1
-        self.Mu[1]= np.sum(data*self.W[:,1],axis=0)/self.N[1] 
+        self.Mu[1]= np.sum( data * self.W[:,1], axis=0) / self.N[1] 
         #cluster 2
-        self.Mu[2]= np.sum(data*self.W[:,2],axis=0)/self.N[2]
+        self.Mu[2]= np.sum( data * self.W[:,2], axis=0) / self.N[2]
         print(self.Mu)
         
         for k in range(self.n_clusters):
@@ -55,9 +53,27 @@ class GMM(object):
 
     # 更新Var
     def _update_Var(self, data):
-        pass    
 
+        #cluster 0
+        self.Var[0]= np.sum( np.square(data-self.Mu[0]) * self.W[:,0], axis=0 ) / self.N[0] 
+        #cluster 1
+        self.Var[1]= np.sum( np.square(data-self.Mu[1]) * self.W[:,1], axis=0 ) / self.N[1] 
+        #cluster 2
+        self.Var[2]= np.sum( np.square(data-self.Mu[2]) * self.W[:,2], axis=0 ) / self.N[2] 
+        print(self.Var)
+
+        # (N, D) = (N, D) - (K, D)
+        var_data = np.square(data - self.Mu)         
+        # (K,D)       (K,N)      (N, D)
+        self.Var =  (self.W.T @ var_data) / self.N[:, np.newaxis]  
+        print(self.Var)
+        
+    # 更新pi
+    def _update_pi(self, data):
+        self.pi = self.N/data.shape[0]  # (K,)
+        
     # 屏蔽结束
+
     
     def fit(self, data):
         # 作业3
@@ -65,11 +81,15 @@ class GMM(object):
         random.seed(42)
         n_samples, n_features = data.shape
 
-        # step 0：初始化参数
-        self.Mu = np.array([data[random.randint(0, n_samples - 1)] for _ in range(self.n_clusters)])
-        self.Var = np.array([np.ones(n_features) for _ in range(self.n_clusters)])
-        self.W = np.zeros((n_samples, self.n_clusters))
-        self.pi = np.array([1.0 / self.n_clusters for _ in range(self.n_clusters)])            
+        # step 0：初始化参数        
+        # (K, D)
+        self.Mu = np.array([data[random.randint(0, n_samples - 1)] for _ in range(self.n_clusters)])  
+        # (K, D)       
+        self.Var = np.array([np.ones(n_features) for _ in range(self.n_clusters)])  
+        # (N, K)
+        self.W = np.zeros((n_samples, self.n_clusters))  
+        # (K,)           
+        self.pi = np.array([1.0 / self.n_clusters for _ in range(self.n_clusters)]) 
 
         for iter in range(self.max_iter):
             # E-step 
@@ -84,7 +104,10 @@ class GMM(object):
     
     def predict(self, data):
         # 屏蔽开始
-        pass
+        
+        _update_W(data)
+        return np.argmax(self.W, axis=1)
+        
         # 屏蔽结束
 
 # 生成仿真数据
