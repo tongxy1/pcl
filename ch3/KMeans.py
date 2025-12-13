@@ -1,6 +1,7 @@
 # 文件功能： 实现 K-Means 算法
 
 import numpy as np
+import random
 
 class K_Means(object):
     # k是分组数；tolerance‘中心点误差’；max_iter是迭代次数
@@ -23,7 +24,7 @@ class K_Means(object):
         for iter in range(self.max_iter_):
             # E-step 
             #(N, K)
-            dist = [ np.linalg.norm( data-self.C[k] ) for k in range(self.k_) ]  
+            dist = [ np.linalg.norm( data-self.C[k], axis=1 ) for k in range(self.k_) ]  
             dist = np.array(dist).T     
             #(N,)
             cat = np.argmin(dist, axis=1)    
@@ -31,22 +32,22 @@ class K_Means(object):
             # M-step
             # first implement
             #
-            idx = [ []*2 ]
+            idx = [[]]*2
             idx[0] = np.where(cat==0)
             idx[1] = np.where(cat==1)             
             C_new = np.empty((2, n_features))
-            C_new[0] = np.mean(data[idx[0]]) / len(idx[0])
-            C_new[1] = np.mean(data[idx[1]]) / len(idx[1])
+            C_new[0] = np.mean(data[idx[0]], axis=0) 
+            C_new[1] = np.mean(data[idx[1]], axis=0) 
             print(C_new)
 
             # second implement
             #
             idx = [ np.where( cat == i) for i in range(self.k_) ]             
-            C_new = np.array([ np.mean(data[idx[i]]) / len(idx[i])  for i in range(self.k_) ])
+            C_new = np.array([ np.mean(data[idx[i]], axis=0)   for i in range(self.k_) ])
             print(C_new)
             
 
-            if( np.all( np.abs(C_new-self.C) < self.tolerance_) )
+            if np.all( np.abs(C_new-self.C) < self.tolerance_):
                 break            
             
             self.C = C_new            
@@ -59,7 +60,7 @@ class K_Means(object):
         # 屏蔽开始
         
         #(N, K)
-        dist = [ np.linalg.norm( data-self.C[k] ) for k in range(self.k_) ]  
+        dist = [ np.linalg.norm( p_datas-self.C[k], axis=1 ) for k in range(self.k_) ]  
         dist = np.array(dist).T     
         #(N,)
         result = np.argmin(dist, axis=1)    
