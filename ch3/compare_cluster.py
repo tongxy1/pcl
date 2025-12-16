@@ -17,6 +17,7 @@ from itertools import cycle, islice
 
 from KMeans import K_Means
 from GMM import GMM
+from Spectral import Spectral
 
 np.random.seed(0)
 
@@ -102,12 +103,15 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     # ============
     # 初始化所有聚类算法
     # ============
-    # 自编的K-Means、GMM算法
+    # 自编的K-Means,GMM,Spectral算法
     my_kmeans = K_Means(n_clusters=params['n_clusters'])
     my_gmm = GMM(n_clusters=params['n_clusters'])
+    my_spectral = Spectral(n_clusters=params['n_clusters'])
+
     # sklearn中自带的算法
     ms = cluster.MeanShift(bandwidth=bandwidth, bin_seeding=True)
     two_means = cluster.MiniBatchKMeans(n_clusters=params['n_clusters'])
+    kmeans = cluster.KMeans(n_clusters=params['n_clusters'])
     ward = cluster.AgglomerativeClustering(
         n_clusters=params['n_clusters'], linkage='ward',
         connectivity=connectivity)
@@ -129,17 +133,22 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     
     clustering_algorithms = (
         ('My_KMeans', my_kmeans),
+        ('KMeans', kmeans),
+        
         ('My_GMM', my_gmm),
-        ('MiniBatchKMeans', two_means),
-        ('AffinityPropagation', affinity_propagation),
-        ('MeanShift', ms),
+        ('GaussianMixture', gmm),
+        
+        ('My_Spectral', my_spectral),
         ('SpectralClustering', spectral),
+        
+        # ('MiniBatchKMeans', two_means),
+        # ('AffinityPropagation', affinity_propagation),
+        ('MeanShift', ms),        
         ('Ward', ward),
         ('AgglomerativeClustering', average_linkage),
         ('DBSCAN', dbscan),
         ('OPTICS', optics),
-        ('Birch', birch),
-        ('GaussianMixture', gmm)
+        ('Birch', birch)        
     )
 
     # 此处是内层循环，遍历每种算法
@@ -161,12 +170,13 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
                 " may not work as expected.",
                 category=UserWarning)
             algorithm.fit(X)
-
-        t1 = time.time()
+        
         if hasattr(algorithm, 'labels_'):
             y_pred = algorithm.labels_.astype(np.int)
         else:
             y_pred = algorithm.predict(X)
+
+        t1 = time.time()
 
         plt.subplot(len(datasets), len(clustering_algorithms), plot_num)
         if i_dataset == 0:

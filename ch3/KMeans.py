@@ -14,7 +14,7 @@ class K_Means(object):
         # 作业1
         # 屏蔽开始
         
-        random.seed(42)
+        # random.seed(42)
         n_samples, n_features = data.shape
 
         # step 0：初始化参数        
@@ -32,19 +32,19 @@ class K_Means(object):
             # M-step
             # first implement
             #
-            idx = [[]]*2
-            idx[0] = np.where(cat==0)
-            idx[1] = np.where(cat==1)             
-            C_new = np.empty((2, n_features))
-            C_new[0] = np.mean(data[idx[0]], axis=0) 
-            C_new[1] = np.mean(data[idx[1]], axis=0) 
-            print(C_new)
+            # idx = [[]]*2
+            # idx[0] = np.where(cat==0)
+            # idx[1] = np.where(cat==1)             
+            # C_new = np.empty((2, n_features))
+            # C_new[0] = np.mean(data[idx[0]], axis=0) 
+            # C_new[1] = np.mean(data[idx[1]], axis=0) 
+            # print(C_new)
 
             # second implement
             #
             idx = [ np.where( cat == i) for i in range(self.k_) ]             
             C_new = np.array([ np.mean(data[idx[i]], axis=0)   for i in range(self.k_) ])
-            print(C_new)
+            # print(C_new)
             
 
             if np.all( np.abs(C_new-self.C) < self.tolerance_):
@@ -75,7 +75,15 @@ if __name__ == '__main__':
     cat = k_means.predict(x)
     print("Ck:\n", k_means.C)
     print(cat)
-
+ 
+    # 可视化聚类结果
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(10, 8))    
+    cluster1 = np.where(cat==0)
+    cluster2 = np.where(cat==1)
+    plt.scatter(x[cluster1][:,0], x[cluster1][:,1], c="red", marker = "o",s=50)
+    plt.scatter(x[cluster2][:,0], x[cluster2][:,1], c="green", marker = "x", s=50)
+    plt.savefig('k_means_result.png', dpi=300)
     #
     #sklearn implement for comparing result
     #
