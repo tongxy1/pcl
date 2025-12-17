@@ -122,11 +122,8 @@ class GMM(object):
         self.W = np.zeros((n_samples, self.n_clusters))  
         # (K,)           
         self.pi = np.array([1.0 / self.n_clusters for _ in range(self.n_clusters)]) 
-
-        self.History_Mu = []
+        
         for iter in range(self.max_iter):
-            # 记录以便看可视化收敛情况
-            self.History_Mu.append(self.Mu)                    
             # E-step 
             self._update_W(data)
             # M-step
@@ -181,15 +178,11 @@ if __name__ == '__main__':
 
     cat = gmm.predict(X)    
     print(cat)
+    
     # 可视化聚类结果
     plt.figure(figsize=(10, 8))
     plt.axis([-10, 15, -5, 15])    
     plt.scatter(X[:, 0], X[:, 1], c=cat, s=5, cmap='viridis')
-    hisMu = np.array(gmm.History_Mu)
-
-    plt.plot(hisMu[:,0,0], hisMu[:,1,1],color='red')
-    plt.plot(hisMu[:,1,0], hisMu[:,1,1],color='green')
-    plt.plot(hisMu[:,2,0], hisMu[:,2,1],color='blue')
     plt.savefig('GMM_result.png', dpi=300)
     # plt.show()  
 
