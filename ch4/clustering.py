@@ -58,17 +58,32 @@ def ground_segmentation(data):
             best_d = d
             best_idx = idx
     
-    segmengted_cloud = data[np.where(np.abs(d) >= d_threshold)[0], :]  
+    # segmengted_cloud = data[np.where(np.abs(d) >= d_threshold)[0], :]  
+    
     #在 RANSAC 找到内点集合之后，用所有内点做一次最小二乘（LSQ）平面拟合
-    # inlier_points = data[best_idx]
+    inlier_points = data[best_idx]
+    P = np.ones((inlier_points.shape[0], 4))
+    P[:, :3] = inlier_points    
+    eigvals, eigvecs = np.linalg.eigh( P.T @ P)    
+    min_eigvec = eigvecs[:, np.argmin(eigvals)]
+    n = min_eigvec[:3]
+    n = n / np.linalg.norm(n)
+    centroid = np.mean(inlier_points, axis=0)
+   
+    # 根据拟合的平面模型，滤除地面点
+    d = (data-centroid) @ n.reshape(3,1)
+    segmengted_cloud = data[np.where(np.abs(d) >= d_threshold)[0], :] 
+    
     # centroid = np.mean(inlier_points, axis=0)
+    # data_zero_mean = data - center
+    # cov = data_zero_mean.T @ data_zero_mean
     # cov = np.cov(inlier_points - centroid, rowvar=False)
     # eigvals, eigvecs = np.linalg.eig(cov)
     # min_eigval_index = np.argmin(eigvals)
     # best_n = eigvecs[:, min_eigval_index]
     # # 根据拟合的平面模型，滤除地面点
     # d = (data - centroid) @ best_n
-    # segmengted_cloud = data[np.abs(d) >= d_threshold]    
+    # segmengted_cloud = data[np.abs(d) >= d_threshold, :]    
 
     # 屏蔽结束
 
