@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torch
-import pretty_errors
+# import pretty_errors
 
 
 class PointNet(nn.Module):
@@ -27,6 +27,22 @@ class PointNet(nn.Module):
   def forward(self, x):
     # TODO: use functions in __init__ to build network
     
+    # x: (B, 3, N)
+    x = self.conv1(x) # (B, 64, N)
+    x = self.bn1(x)   # (B, 64, N)
+    x = self.relu(x)  # (B, 64, N)
+
+    x = self.conv2(x) # (B, 128, N)
+    x = self.bn2(x)   # (B, 128, N)
+    x = self.relu(x)  # (B, 128, N)
+
+    x = self.conv3(x) # (B, 1024, N)
+    x = self.bn3(x)   # (B, 1024, N)
+    x = self.relu(x)  # (B, 1024, N)
+    
+    x = torch.max(x, 2, keepdim=False)[0] # (B, 1024)
+
+
     return x
 
 
