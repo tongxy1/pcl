@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
+# from torch.autograd import Variable
 import torch
 # import pretty_errors
 
@@ -57,6 +57,7 @@ class PointNet(nn.Module):
 
 if __name__ == "__main__":
   net = PointNet()
-  sim_data = Variable(torch.rand(3, 3, 10000))
+  # sim_data = Variable(torch.rand(3, 3, 10000))
+  sim_data = torch.rand(3, 3, 10000)
   out = net(sim_data)
   print('gfn', out.size())

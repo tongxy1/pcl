@@ -21,7 +21,7 @@ global_step = 0
 show_every = 1
 val_every = 3
 date = datetime.date.today()
-save_dir = "../output"
+save_dir = "ch5/output"
 
 
 def save_ckp(ckp_dir, model, optimizer, epoch, best_acc, date):
@@ -45,6 +45,7 @@ def load_ckp(ckp_path, model, optimizer):
 
 def softXEnt(prediction, real_class):
     # TODO: return loss here
+    pass
 
 
 def get_eval_acc_results(model, data_loader, device):
@@ -65,14 +66,14 @@ def get_eval_acc_results(model, data_loader, device):
             y = y.to(device)
 
             # TODO: put x into network and get out
-            out = 
+            # out = 
 
             # TODO: get pred_y from out
-            pred_y =
+            # pred_y =
             gt = np.argmax(y.cpu().numpy(), axis=1)
 
             # TODO: calculate acc from pred_y and gt
-            acc = 
+            # acc = 
             gt_ys = np.append(gt_ys, gt)
             pred_ys = np.append(pred_ys, pred_y)
             idx = gt
@@ -83,14 +84,14 @@ def get_eval_acc_results(model, data_loader, device):
 
 
 if __name__ == "__main__":
-    writer = SummaryWriter('./output/runs/tersorboard')
+    writer = SummaryWriter('ch5/output/runs/tersorboard')
     torch.manual_seed(SEED)
     device = torch.device(f'cuda:{gpus[0]}' if torch.cuda.is_available() else 'cpu')
     print("Loading train dataset...")
-    train_data = PointNetDataset("../../../dataset/modelnet40_normal_resampled", train=0)
+    train_data = PointNetDataset("modelnet40_normal_resampled", train=0)
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     print("Loading valid dataset...")
-    val_data = PointNetDataset("../../../dataset/modelnet40_normal_resampled/", train=1)
+    val_data = PointNetDataset("modelnet40_normal_resampled", train=1)
     val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True)
     print("Set model and optimizer...")
     model = PointNet().to(device=device)
@@ -112,7 +113,7 @@ if __name__ == "__main__":
         # TODO: set grad to zero
 
         # TODO: put x into network and get out
-        out = 
+        # out = 
 
         loss = softXEnt(out, y)
         
@@ -145,4 +146,4 @@ if __name__ == "__main__":
 
           example = torch.randn(1, 3, 10000).to(device)
           traced_script_module = torch.jit.trace(model, example)
-          traced_script_module.save("../output/traced_model.pt")
+          traced_script_module.save("ch5/output/traced_model.pt")
