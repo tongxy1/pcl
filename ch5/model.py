@@ -41,10 +41,19 @@ class PointNet(nn.Module):
     x = self.relu(x)  # (B, 1024, N)
     
     x = torch.max(x, 2, keepdim=False)[0] # (B, 1024)
-
+    x = self.dropout(x)
+    
+    x = self.fc1(x)   # ( B, 512)
+    x = self.bn4(x)   # ( B, 512)
+    x = self.relu(x)  # ( B, 512)
+    
+    x = self.fc2(x)   #( B, 256)
+    x = self.bn5(x)   #( B, 256)
+    x = self.relu(x)  #( B, 256)    
+    
+    x = self.fc3(x)   #( B, 40)   
 
     return x
-
 
 if __name__ == "__main__":
   net = PointNet()
