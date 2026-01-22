@@ -45,7 +45,18 @@ def load_ckp(ckp_path, model, optimizer):
 
 def softXEnt(prediction, real_class):
     # TODO: return loss here
-    pass
+  
+    # input:  prediction (B, 40),
+    #         real_class (B, 40), one-hot coding
+  
+    exp = torch.exp(prediction) #(B, 40)
+    sum = torch.sum(exp, dim=1) #(B, 1)
+    p = exp/sum                 #(B, 40)
+    sum_p = torch.sum(p * real_class, dim=1)  # (B,1) = sum( (B, 40) * (B, 40), dim=1 )
+    loss_batch = - torch.log(sum)    #(B, 1)  
+    loss = torch.mean(loss_batch)    #(1)
+  
+    return loss
 
 
 def get_eval_acc_results(model, data_loader, device):
@@ -111,16 +122,18 @@ if __name__ == "__main__":
         y = y.to(device)
 
         # TODO: set grad to zero
-
+        optimizer..zero_grad()
         # TODO: put x into network and get out
-        # out = 
+        out = model(x)
 
         loss = softXEnt(out, y)
         
         # TODO: loss backward
+        loss.backward()
 
         # TODO: update network's param
-        
+        optimizer.step()
+
         acc_loss += batch_size * loss.item()
         num_samples += y.shape[0]
         global_step += 1
