@@ -47,8 +47,17 @@ class PointNetDataset(Dataset):
     feature, label = self._features[idx], self._labels[idx]
     
     # TODO: normalize feature
-    
+    mean = np.mean(feature, axis=0, keepdims=True)  # (10000,3) -> (1, 3)
+    vars = np.mean((feature-mean) ** 2, axis=0, keepdims=True)  # (10000,3)-(1,3)-> (10000,3) -> (1,3)
+    feature = (feature - mean)/np.sqrt(vars+1e-8)  # (10000,3)    
+
     # TODO: rotation to feature
+    theta = np.random.uniform(0, 2 * np.pi)
+    rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
+                                [np.sin(theta),  np.cos(theta), 0],
+                                [0,              0,             1]])
+    feature = rotation_matrix @ feature.T  # (3, N)    
+    feature = feature.T  # (N, 3)
 
     # jitter
     feature += np.random.normal(0, 0.02, size=feature.shape)

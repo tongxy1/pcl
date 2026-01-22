@@ -50,10 +50,10 @@ def softXEnt(prediction, real_class):
     #         real_class (B, 40), one-hot coding
   
     exp = torch.exp(prediction) #(B, 40)
-    sum = torch.sum(exp, dim=1) #(B, 1)
-    p = exp/sum                 #(B, 40)
-    sum_p = torch.sum(p * real_class, dim=1)  # (B,1) = sum( (B, 40) * (B, 40), dim=1 )
-    loss_batch = - torch.log(sum)    #(B, 1)  
+    sum = torch.sum(exp, dim=1, keepdim=True) #(B, 1)
+    p = exp/sum                 #(B, 40) = (B, 40)/(B, 1) 
+    sum_p = torch.sum(p * real_class, dim=1, keepdim=True)  # (B,1) = sum( (B, 40) * (B, 40), dim=1 )
+    loss_batch = - torch.log(sum_p)    #(B, 1)  
     loss = torch.mean(loss_batch)    #(1)
   
     return loss
@@ -63,13 +63,13 @@ def get_eval_acc_results(model, data_loader, device):
     """
     ACC
     """
-    seq_id = 0
+    # seq_id = 0
     model.eval()
 
-    distribution = np.zeros([5])
-    confusion_matrix = np.zeros([5, 5])
-    pred_ys = []
-    gt_ys = []
+    # distribution = np.zeros([5])
+    # confusion_matrix = np.zeros([5, 5])
+    # pred_ys = []
+    # gt_ys = []
     with torch.no_grad():
         accs = []
         for x, y in data_loader:
@@ -77,17 +77,17 @@ def get_eval_acc_results(model, data_loader, device):
             y = y.to(device)
 
             # TODO: put x into network and get out
-            # out = 
+            out = model(x)  # (B, 40)
 
             # TODO: get pred_y from out
-            # pred_y =
-            gt = np.argmax(y.cpu().numpy(), axis=1)
+            pred_y = np.argmax(out.cpu().detach().numpy(), axis=1)  # (B,)
+            gt = np.argmax(y.cpu().numpy(), axis=1) # (B,)
 
             # TODO: calculate acc from pred_y and gt
-            # acc = 
-            gt_ys = np.append(gt_ys, gt)
-            pred_ys = np.append(pred_ys, pred_y)
-            idx = gt
+            acc = np.sum(pred_y == gt) / len(gt)
+            # gt_ys = np.append(gt_ys, gt)
+            # pred_ys = np.append(pred_ys, pred_y)
+            # idx = gt
 
             accs.append(acc)
 
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         y = y.to(device)
 
         # TODO: set grad to zero
-        optimizer..zero_grad()
+        optimizer.zero_grad()
         # TODO: put x into network and get out
         out = model(x)
 
@@ -143,7 +143,7 @@ if __name__ == "__main__":
           # ...log the running loss
           writer.add_scalar('training loss', acc_loss / num_samples, global_step)
           writer.add_scalar('training acc', acc, global_step)
-          # print( f"loss at epoch {epoch} step {global_step}:{loss.item():3f}, lr:{optimizer.state_dict()['param_groups'][0]['lr']: .6f}, time:{time.time() - start_tic: 4f}sec")
+          print( f"loss at epoch {epoch} step {global_step}:{loss.item():3f}, lr:{optimizer.state_dict()['param_groups'][0]['lr']: .6f}, time:{time.time() - start_tic: 4f}sec")
       scheduler.step()
       print(f"loss at epoch {epoch}:{acc_loss / num_samples:.3f}, lr:{optimizer.state_dict()['param_groups'][0]['lr']: .6f}, time:{time.time() - start_tic: 4f}sec")
       
