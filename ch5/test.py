@@ -11,7 +11,7 @@ from model import PointNet
 SEED = 13
 gpus = [0]
 batch_size = 1
-ckp_path = '../output/latest.pth'
+ckp_path = 'ch5/output/latest.pth'
 
 def load_ckp(ckp_path, model):
   state = torch.load(ckp_path)
@@ -22,7 +22,7 @@ if __name__ == "__main__":
   torch.manual_seed(SEED)
   device = torch.device(f'cuda:{gpus[0]}' if torch.cuda.is_available() else 'cpu')
   print("Loading test dataset...")
-  test_data = PointNetDataset("./dataset/modelnet40_normal_resampled", train=1)
+  test_data = PointNetDataset("modelnet40_normal_resampled", train=1)
   test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
   model = PointNet().to(device=device)
   if ckp_path:
@@ -40,16 +40,16 @@ if __name__ == "__main__":
       y = y.to(device)
 
       # TODO: put x into network and get out
-      out =
+      out = model(x)  # (B, 40)
 
       # TODO: get pred_y from out
-      pred_y = 
+      pred_y = torch.argmax(out, dim=1).cpu().numpy()  # (B,)
 
       gt = np.argmax(y.cpu().numpy(), axis=1)
       print("pred[" + str(pred_y)+"] gt[" + str(gt) + "]")
 
       # TODO: calculate acc from pred_y and gt
-      acc = 
+      acc = torch.sum(torch.eq(torch.tensor(pred_y), torch.tensor(gt))).item() / len(gt)
       gt_ys = np.append(gt_ys, gt)
       pred_ys = np.append(pred_ys, pred_y)
 

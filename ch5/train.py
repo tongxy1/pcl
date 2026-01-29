@@ -12,8 +12,8 @@ from model import PointNet
 
 SEED = 13
 batch_size = 32
-epochs = 100
-decay_lr_factor = 0.95
+epochs = 100  
+decay_lr_factor = 0.96 
 decay_lr_every = 2
 lr = 0.01
 gpus = [0]
@@ -49,10 +49,13 @@ def softXEnt(prediction, real_class):
     # input:  prediction (B, 40),
     #         real_class (B, 40), one-hot coding
   
-    exp = torch.exp(prediction) #(B, 40)
+    exp = torch.exp(prediction - torch.max(prediction, dim=1, keepdim=True)[0]) #(B, 40)   max-shift进行数值稳定化
     sum = torch.sum(exp, dim=1, keepdim=True) #(B, 1)
     p = exp/sum                 #(B, 40) = (B, 40)/(B, 1) 
-    sum_p = torch.sum(p * real_class, dim=1, keepdim=True)  # (B,1) = sum( (B, 40) * (B, 40), dim=1 )
+    
+    sum_p = torch.sum(p * real_class, dim=1, keepdim=True)  # (B,1) = sum( (B, 40) * (B, 40), dim=1 )    
+    sum_p = torch.clamp(sum_p, min=1e-10)  #(B, 1)  防止log(0)
+
     loss_batch = - torch.log(sum_p)    #(B, 1)  
     loss = torch.mean(loss_batch)    #(1)
   
@@ -72,6 +75,7 @@ def get_eval_acc_results(model, data_loader, device):
     # gt_ys = []
     with torch.no_grad():
         accs = []
+        losses = []
         for x, y in data_loader:
             x = x.to(device)
             y = y.to(device)
@@ -89,24 +93,33 @@ def get_eval_acc_results(model, data_loader, device):
             # pred_ys = np.append(pred_ys, pred_y)
             # idx = gt
 
+            # calculate val loss
+            loss = softXEnt(out, y)
+            losses.append(loss.item())
+            
+
             accs.append(acc)
 
-        return np.mean(accs)
+        return np.mean(accs), np.mean(losses)
 
 
 if __name__ == "__main__":
-    writer = SummaryWriter('ch5/output/runs/tersorboard')
+    writer = SummaryWriter('ch5/output/runs/tensorboard')
     torch.manual_seed(SEED)
     device = torch.device(f'cuda:{gpus[0]}' if torch.cuda.is_available() else 'cpu')
+
     print("Loading train dataset...")
-    train_data = PointNetDataset("modelnet40_normal_resampled", train=0)
+    train_data = PointNetDataset("dataset/modelnet40_normal_resampled", train=0)
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     print("Loading valid dataset...")
-    val_data = PointNetDataset("modelnet40_normal_resampled", train=1)
+    val_data = PointNetDataset("dataset/modelnet40_normal_resampled", train=1)
     val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True)
+    
     print("Set model and optimizer...")
     model = PointNet().to(device=device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
+    # optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
+    
     scheduler = optim.lr_scheduler.StepLR(
           optimizer, step_size=decay_lr_every, gamma=decay_lr_factor)
 
@@ -141,17 +154,23 @@ if __name__ == "__main__":
         # print('acc: ', acc)
         if (global_step + 1) % show_every == 0:
           # ...log the running loss
-          writer.add_scalar('training loss', acc_loss / num_samples, global_step)
-          writer.add_scalar('training acc', acc, global_step)
+          writer.add_scalar('train/training acc', acc, global_step)
+          writer.add_scalar('train/training loss', acc_loss / num_samples, global_step)        
           print( f"loss at epoch {epoch} step {global_step}:{loss.item():3f}, lr:{optimizer.state_dict()['param_groups'][0]['lr']: .6f}, time:{time.time() - start_tic: 4f}sec")
-      scheduler.step()
-      print(f"loss at epoch {epoch}:{acc_loss / num_samples:.3f}, lr:{optimizer.state_dict()['param_groups'][0]['lr']: .6f}, time:{time.time() - start_tic: 4f}sec")
-      
+
+      scheduler.step()            
+      print(f"loss at epoch {epoch}:{acc_loss / num_samples:.3f}, lr:{optimizer.state_dict()['param_groups'][0]['lr']: .6f}, time:{time.time() - start_tic: 4f}sec")            
+      writer.add_scalar('train/epoch loss', acc_loss / num_samples, epoch)
+
       if (epoch + 1) % val_every == 0:
         
-        acc = get_eval_acc_results(model, val_loader, device)
-        print("eval at epoch[" + str(epoch) + f"] acc[{acc:3f}]")
-        writer.add_scalar('validing acc', acc, global_step)
+        acc, loss = get_eval_acc_results(model, val_loader, device)
+        print("eval at epoch[" + str(epoch) + f"] acc[{acc:3f}] loss[{loss:3f}]")
+        writer.add_scalar('valid/validing acc', acc, global_step)
+        writer.add_scalar('valid/validing loss', loss, global_step)
+
+        writer.add_scalar('valid/epoch validing acc', acc, epoch)
+        writer.add_scalar('valid/epoch validing loss', loss, epoch)
 
         if acc > best_acc:
           best_acc = acc
