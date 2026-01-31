@@ -8,55 +8,23 @@ import torch
 class PointNet(nn.Module):
   def __init__(self):
     super(PointNet, self).__init__()
-    # self.conv1 = nn.Conv1d(3, 64, 1)
-    # self.conv2 = nn.Conv1d(64, 128, 1)
-    # self.conv3 = nn.Conv1d(128, 1024, 1)
-    # self.fc1 = nn.Linear(1024, 512)
-    # self.fc2 = nn.Linear(512, 256)
-    # self.fc3 = nn.Linear(256, 40)
-
-    # self.bn1 = nn.BatchNorm1d(64)
-    # self.bn2 = nn.BatchNorm1d(128)
-    # self.bn3 = nn.BatchNorm1d(1024)
-    # self.bn4 = nn.BatchNorm1d(512)
-    # self.bn5 = nn.BatchNorm1d(256)
-
-    # self.relu = nn.ReLU(inplace=True)
-    # self.dropout = nn.Dropout(p=0.3)
     
-
-    # self.conv1 = nn.Conv1d(3, 64, 1)
-    # self.conv2 = nn.Conv1d(64, 128, 1)
-    # self.conv3 = nn.Conv1d(128, 512, 1)
-    # self.fc1 = nn.Linear(512, 256)
-    # self.fc2 = nn.Linear(256, 128)
-    # self.fc3 = nn.Linear(128, 40)
-
-    # self.bn1 = nn.BatchNorm1d(64)
-    # self.bn2 = nn.BatchNorm1d(128)
-    # self.bn3 = nn.BatchNorm1d(512)
-    # self.bn4 = nn.BatchNorm1d(256)
-    # self.bn5 = nn.BatchNorm1d(128)
-
-    # self.relu = nn.ReLU(inplace=True)
-    # self.dropout = nn.Dropout(p=0.1)
-
-
     self.conv1 = nn.Conv1d(3, 64, 1)
     self.conv2 = nn.Conv1d(64, 128, 1)
-    self.conv3 = nn.Conv1d(128, 256, 1)
-    self.fc1 = nn.Linear(256, 128)
-    self.fc2 = nn.Linear(128, 64)
-    self.fc3 = nn.Linear(64, 40)
+    self.conv3 = nn.Conv1d(128, 1024, 1)
+    self.fc1 = nn.Linear(1024, 512)
+    self.fc2 = nn.Linear(512, 256)
+    self.fc3 = nn.Linear(256, 40)
 
     self.bn1 = nn.BatchNorm1d(64)
     self.bn2 = nn.BatchNorm1d(128)
-    self.bn3 = nn.BatchNorm1d(256)
-    self.bn4 = nn.BatchNorm1d(128)
-    self.bn5 = nn.BatchNorm1d(64)
+    self.bn3 = nn.BatchNorm1d(1024)
+    self.bn4 = nn.BatchNorm1d(512)
+    self.bn5 = nn.BatchNorm1d(256)
 
     self.relu = nn.ReLU(inplace=True)
-    # self.dropout = nn.Dropout(p=0.1)
+    self.dropout = nn.Dropout(p=0.4)
+    
 
   def forward(self, x):
     # TODO: use functions in __init__ to build network
@@ -84,7 +52,8 @@ class PointNet(nn.Module):
     x = self.fc2(x)   #( B, 256)
     x = self.bn5(x)   #( B, 256)
     x = self.relu(x)  #( B, 256)    
-    
+    x = self.dropout(x)
+
     x = self.fc3(x)   #( B, 40)   
 
     return x

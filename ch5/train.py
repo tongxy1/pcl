@@ -13,7 +13,7 @@ from model import PointNet
 SEED = 13
 batch_size = 32
 epochs = 100  
-decay_lr_factor = 0.96 
+decay_lr_factor = 0.95 
 decay_lr_every = 2
 lr = 0.01
 gpus = [0]
@@ -101,7 +101,7 @@ def get_eval_acc_results(model, data_loader, device):
             accs.append(acc)
 
         return np.mean(accs), np.mean(losses)
-
+    
 
 if __name__ == "__main__":
     writer = SummaryWriter('ch5/output/runs/tensorboard')
@@ -130,9 +130,9 @@ if __name__ == "__main__":
       acc_loss = 0.0
       num_samples = 0
       start_tic = time.time()
-      for x, y in train_loader:
+      for x, y in train_loader:        
         x = x.to(device)
-        y = y.to(device)
+        y = y.to(device)        
 
         # TODO: set grad to zero
         optimizer.zero_grad()

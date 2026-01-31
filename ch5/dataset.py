@@ -71,11 +71,30 @@ class PointNetDataset(Dataset):
   def __getitem__(self, idx):
     feature, label = self._features[idx], self._labels[idx]
     
+    # random sample 1024 points from feature
+    OUT_SIZE = 1024
+    # rand_size = np.random.randint(500, 5000)
+    # choice = np.random.choice(len(feature), rand_size, replace=False)
+    # feature = feature[choice, :]
     
+    # if rand_size >= OUT_SIZE:
+    #   choice = np.random.choice(rand_size, OUT_SIZE, replace=False)      
+    # else:      
+    #   extra_choice = np.random.choice( rand_size, OUT_SIZE - rand_size, replace=True)
+    #   choice = np.concatenate((np.arange(rand_size), extra_choice), axis=0)      
+    
+    choice = np.random.choice(len(feature), OUT_SIZE, replace=False)
+    
+    feature = feature[choice, :]
+
     # TODO: normalize feature
-    mean = np.mean(feature, axis=0, keepdims=True)  # (10000,3) -> (1, 3)
-    vars = np.mean((feature-mean) ** 2, axis=0, keepdims=True)  # (10000,3)-(1,3)-> (10000,3) -> (1,3)
-    feature = (feature - mean)/np.sqrt(vars+1e-8)  # (10000,3)    
+    center = np.mean(feature, axis=0, keepdims=True)  # (N, 3) -> (1, 3)
+    dist = np.max(np.sqrt(np.sum((feature-center) ** 2, axis=1)), axis=0)  # (N,3)-(1,3) -> (N,)-> (N,) -> (1)
+    feature = (feature - center)/dist  # (N,3)
+    
+    # center = np.mean(feature, axis=0, keepdims=True)  # (N, 3) -> (1, 3)
+    # vars = np.mean((feature-center) ** 2, axis=0, keepdims=True)  # (N,3)-(1,3)-> (N,3) -> (1,3)
+    # feature = (feature - center)/np.sqrt(vars+1e-8)  # (N,3)    
 
     if self._train == 0:
       # TODO: rotation to feature
@@ -91,7 +110,7 @@ class PointNetDataset(Dataset):
       # jitter
       feature += np.random.normal(0, 0.02, size=feature.shape)
     
-    feature = torch.Tensor(feature.T) # (3,10000) <-- (10000,3)
+    feature = torch.Tensor(feature.T) # (3,N) <-- (N,3)
 
     l_lable = [0 for _ in range(len(self._classes))]
     l_lable[self._classes.index(label)] = 1
