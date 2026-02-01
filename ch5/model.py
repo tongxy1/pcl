@@ -23,7 +23,7 @@ class PointNet(nn.Module):
     self.bn5 = nn.BatchNorm1d(256)
 
     self.relu = nn.ReLU(inplace=True)
-    self.dropout = nn.Dropout(p=0.4)
+    self.dropout = nn.Dropout(p=0.3)
     
 
   def forward(self, x):
@@ -42,8 +42,7 @@ class PointNet(nn.Module):
     x = self.bn3(x)   # (B, 1024, N)
     x = self.relu(x)  # (B, 1024, N)
     
-    x = torch.max(x, 2, keepdim=False)[0] # (B, 1024)
-    # x = self.dropout(x)
+    x = torch.max(x, 2, keepdim=False)[0] # (B, 1024)    
     
     x = self.fc1(x)   # ( B, 512)
     x = self.bn4(x)   # ( B, 512)

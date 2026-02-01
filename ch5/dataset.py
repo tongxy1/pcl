@@ -5,31 +5,6 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import numpy as np
 
-def random_rotate_matrix_xyz():
-    angles = np.random.rand(3) * 2 * np.pi
-    cx, cy, cz = np.cos(angles)
-    sx, sy, sz = np.sin(angles)
-
-    Rx = np.array([
-        [1,  0,   0],
-        [0, cx, -sx],
-        [0, sx,  cx]
-    ])
-
-    Ry = np.array([
-        [ cy, 0, sy],
-        [  0, 1, 0],
-        [-sy, 0, cy]
-    ])
-
-    Rz = np.array([
-        [cz, -sz, 0],
-        [sz,  cz, 0],
-        [0,    0, 1]
-    ])
-
-    R = Rz @ Ry @ Rx
-    return R
 
 def read_pcd_from_file(file):
     np_pts = np.zeros(0)
@@ -72,29 +47,26 @@ class PointNetDataset(Dataset):
     feature, label = self._features[idx], self._labels[idx]
     
     # random sample 1024 points from feature
+    # 先Dropout到500-5000之间的点数
+    rand_size = np.random.randint(500, 5000)
+    choice = np.random.choice(len(feature), rand_size, replace=False)
+    feature = feature[choice, :]
+    
+    # 统一对齐到1024个点    
     OUT_SIZE = 1024
-    # rand_size = np.random.randint(500, 5000)
-    # choice = np.random.choice(len(feature), rand_size, replace=False)
-    # feature = feature[choice, :]
-    
-    # if rand_size >= OUT_SIZE:
-    #   choice = np.random.choice(rand_size, OUT_SIZE, replace=False)      
-    # else:      
-    #   extra_choice = np.random.choice( rand_size, OUT_SIZE - rand_size, replace=True)
-    #   choice = np.concatenate((np.arange(rand_size), extra_choice), axis=0)      
-    
-    choice = np.random.choice(len(feature), OUT_SIZE, replace=False)
+    if rand_size >= OUT_SIZE:
+      choice = np.random.choice(rand_size, OUT_SIZE, replace=False)      
+    else:      
+      extra_choice = np.random.choice( rand_size, OUT_SIZE - rand_size, replace=True)
+      choice = np.concatenate((np.arange(rand_size), extra_choice), axis=0)      
     
     feature = feature[choice, :]
 
     # TODO: normalize feature
+    # center and scale （Unit sphere scale）
     center = np.mean(feature, axis=0, keepdims=True)  # (N, 3) -> (1, 3)
     dist = np.max(np.sqrt(np.sum((feature-center) ** 2, axis=1)), axis=0)  # (N,3)-(1,3) -> (N,)-> (N,) -> (1)
-    feature = (feature - center)/dist  # (N,3)
-    
-    # center = np.mean(feature, axis=0, keepdims=True)  # (N, 3) -> (1, 3)
-    # vars = np.mean((feature-center) ** 2, axis=0, keepdims=True)  # (N,3)-(1,3)-> (N,3) -> (1,3)
-    # feature = (feature - center)/np.sqrt(vars+1e-8)  # (N,3)    
+    feature = (feature - center)/dist  # (N,3)       
 
     if self._train == 0:
       # TODO: rotation to feature
@@ -102,8 +74,7 @@ class PointNetDataset(Dataset):
       rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
                                   [np.sin(theta),  np.cos(theta), 0],
                                   [0,              0,             1]])
-      # rotation_matrix = random_rotate_matrix_xyz()
-      
+                  
       feature = rotation_matrix @ feature.T  # (3, N)    
       feature = feature.T  # (N, 3)
 
